@@ -22,7 +22,6 @@ import (
 	"os"
 	"os/signal"
 	"time"
-	"encoding/json"
 
 	"cloud.google.com/go/logging"
 	"example.com/micro/metadata"

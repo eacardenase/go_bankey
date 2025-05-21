@@ -1,0 +1,27 @@
+{
+  "extends": [
+    "config:recommended",
+    "schedule:weekly"
+  ],
+  "semanticCommits": "disabled",
+  "postUpdateOptions": [
+    "gomodTidy"
+  ],
+  "commitMessagePrefix": "chore(all): ",
+  "commitMessageAction": "update",
+  "ignorePaths": [
+    "testing/docker/Dockerfile*"
+  ],
+  "groupName": "all",
+  "packageRules": [
+    {
+      "matchUpdateTypes": [
+        "major"
+      ],
+      "enabled": false
+    }
+  ],
+  "constraints": {
+    "go": "1.20"
+  }
+}

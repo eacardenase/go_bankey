@@ -106,7 +106,7 @@ func newApp(ctx context.Context, port, projectID string) (*App, error) {
 	// Setup request router.
 	r := mux.NewRouter()
 
-	r.HandleFunc("/", app.helloHandler).Methods("GET")
+	r.HandleFunc("/", app.Handler).Methods("GET")
 	r.HandleFunc("/profile/{profile_id}", app.profileHandler).Methods("GET")
 	r.HandleFunc("/account/{account_id}", app.accountHandler).Methods("GET")
 

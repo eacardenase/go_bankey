@@ -22,6 +22,7 @@ import (
 	"os"
 	"os/signal"
 	"time"
+	"encoding/json"
 
 	"cloud.google.com/go/logging"
 	"example.com/micro/metadata"
@@ -104,9 +105,38 @@ func newApp(ctx context.Context, port, projectID string) (*App, error) {
 
 	// Setup request router.
 	r := mux.NewRouter()
-	r.HandleFunc("/", app.Handler).
-		Methods("GET")
+
+	r.HandleFunc("/", app.helloHandler).Methods("GET")
+	r.HandleFunc("/profile/{profile_id}", app.profileHandler).Methods("GET")
+	r.HandleFunc("/account/{account_id}", app.accountHandler).Methods("GET")
+
 	app.Server.Handler = r
 
 	return app, nil
+}
+
+func serveJSONFromFile(w http.ResponseWriter, filePath string, notFoundMsg string) {
+	file, err := os.ReadFile(filePath)
+	if err != nil {
+		http.Error(w, notFoundMsg, http.StatusNotFound)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(file)
+}
+
+
+func (a *App) profileHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	profileID := vars["profile_id"]
+	filePath := fmt.Sprintf("data/profile-%s.json", profileID)
+	serveJSONFromFile(w, filePath, "Profile not found.")
+}
+
+func (a *App) accountHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	accountID := vars["account_id"]
+	filePath := fmt.Sprintf("data/accounts-%s.json", accountID)
+	serveJSONFromFile(w, filePath, "Account not found.")
 }

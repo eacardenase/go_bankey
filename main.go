@@ -25,7 +25,6 @@ import (
 
 	"cloud.google.com/go/logging"
 	"example.com/micro/metadata"
-	"github.com/gorilla/mux"
 	"google.golang.org/api/option"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -102,12 +101,11 @@ func newApp(ctx context.Context, port, projectID string) (*App, error) {
 	}
 	app.log = client.Logger("test-log", logging.RedirectAsJSON(os.Stderr))
 
-	// Setup request router.
-	r := mux.NewRouter()
+	r := http.NewServeMux()
 
-	r.HandleFunc("/", app.Handler).Methods("GET")
-	r.HandleFunc("/profile/{profile_id}", app.profileHandler).Methods("GET")
-	r.HandleFunc("/account/{account_id}", app.accountHandler).Methods("GET")
+	r.HandleFunc("/", app.helloHandler)
+	r.HandleFunc("/profile/{profile_id}", app.profileHandler)
+	r.HandleFunc("/account/{account_id}", app.accountHandler)
 
 	app.Server.Handler = r
 
@@ -125,17 +123,26 @@ func serveJSONFromFile(w http.ResponseWriter, filePath string, notFoundMsg strin
 	w.Write(file)
 }
 
+func (a *App) helloHandler(w http.ResponseWriter, r *http.Request) {
+	a.log.Log(logging.Entry{
+		Severity: logging.Info,
+		HTTPRequest: &logging.HTTPRequest{
+			Request: r,
+		},
+		Labels:  map[string]string{"arbitraryField": "custom entry"},
+		Payload: "Structured logging example.",
+	})
+	fmt.Fprintf(w, "Hello World!\n")
+}
 
 func (a *App) profileHandler(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	profileID := vars["profile_id"]
+	profileID := r.PathValue("profile_id")
 	filePath := fmt.Sprintf("data/profile-%s.json", profileID)
 	serveJSONFromFile(w, filePath, "Profile not found.")
 }
 
 func (a *App) accountHandler(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	accountID := vars["account_id"]
+	accountID := r.PathValue("account_id")
 	filePath := fmt.Sprintf("data/accounts-%s.json", accountID)
 	serveJSONFromFile(w, filePath, "Account not found.")
 }
